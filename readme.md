@@ -7,5 +7,9 @@
 6. Name
 7. change password, change something else idk
 
-## steps
-1. auth (login logout)
+***
+## domains**
+1. Auth
+   1. login
+   2. logout
+   3. check
