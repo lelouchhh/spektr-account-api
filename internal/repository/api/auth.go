@@ -6,9 +6,12 @@ import (
 	"errors"
 	"fmt"
 	"github.com/llchhh/spektr-account-api/domain"
+	"github.com/llchhh/spektr-account-api/internal/encryption"
+	"github.com/llchhh/spektr-account-api/internal/rest/middleware"
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
 )
 
 type AuthRepository struct {
@@ -23,6 +26,13 @@ type AuthResponse struct {
 
 func (a *AuthRepository) Login(ctx context.Context, user domain.Auth) (string, error) {
 	// Marshal the user data into a JSON object for arg1
+	if middleware.IsSuspicious(user.Login) {
+		return "", fmt.Errorf("invalid input detected")
+	}
+
+	if middleware.IsSuspicious(user.Password) {
+		return "", fmt.Errorf("invalid input detected")
+	}
 	arg1JSON, err := json.Marshal(user)
 	if err != nil {
 		return "", fmt.Errorf("failed to marshal user data: %w", err)
@@ -79,9 +89,11 @@ func (a *AuthRepository) Login(ctx context.Context, user domain.Auth) (string, e
 	if result.SessionID == "" {
 		return "", errors.New("session_id not found in the response")
 	}
-
+	encryptedToken, err := encryption.EncryptToken(os.Getenv("ENCRYPTION_KEY"), result.SessionID)
 	// Return the session ID
-	return result.SessionID, nil
+	decrypted, _ := encryption.DecryptToken(os.Getenv("ENCRYPTION_KEY"), encryptedToken)
+	fmt.Println(decrypted)
+	return encryptedToken, nil
 }
 
 func NewAuthRepository(baseURL string) *AuthRepository {
