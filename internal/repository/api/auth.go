@@ -84,15 +84,14 @@ func (a *AuthRepository) Login(ctx context.Context, user domain.Auth) (string, e
 	if err := json.Unmarshal(body, &result); err != nil {
 		return "", fmt.Errorf("failed to unmarshal response: %w", err)
 	}
-
 	// Ensure the session_id is present in the response
 	if result.SessionID == "" {
 		return "", errors.New("session_id not found in the response")
 	}
 	encryptedToken, err := encryption.EncryptToken(os.Getenv("ENCRYPTION_KEY"), result.SessionID)
-	// Return the session ID
-	decrypted, _ := encryption.DecryptToken(os.Getenv("ENCRYPTION_KEY"), encryptedToken)
-	fmt.Println(decrypted)
+	if err != nil {
+		return "", fmt.Errorf("failed to encrypt token: %w", err)
+	}
 	return encryptedToken, nil
 }
 

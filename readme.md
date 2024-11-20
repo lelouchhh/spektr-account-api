@@ -11,5 +11,6 @@
 ## domains**
 1. Auth
    1. login
-   2. logout
-   3. check
+2. profile
+   1. get_profile
+   2. change_password
