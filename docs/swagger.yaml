@@ -1,0 +1,241 @@
+definitions:
+  domain.Auth:
+    properties:
+      login:
+        type: string
+      passwd:
+        type: string
+    type: object
+  domain.Notification:
+    properties:
+      body:
+        type: string
+      type:
+        type: string
+    type: object
+  domain.Profile:
+    properties:
+      ID:
+        type: string
+      balance:
+        type: number
+      email:
+        type: string
+      firstName:
+        type: string
+      full_name:
+        type: string
+      internet_status:
+        type: boolean
+      last_name:
+        type: string
+      middle_name:
+        type: string
+      next_pay_date:
+        type: string
+      password:
+        type: string
+      phone:
+        type: string
+      tariff:
+        type: string
+      to_pay:
+        type: number
+    type: object
+  rest.ResponseError:
+    properties:
+      message:
+        type: string
+    type: object
+info:
+  contact:
+    email: support@example.com
+    name: API Support
+    url: http://example.com/support
+  description: This is a sample server for managing users.
+  title: Example API
+  version: "1.0"
+paths:
+  /api/v1/auth/sign-in:
+    post:
+      consumes:
+      - application/json
+      description: Logs the user in using their credentials (username and password)
+      parameters:
+      - description: Login credentials
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/domain.Auth'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: token
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid request payload
+          schema:
+            $ref: '#/definitions/rest.ResponseError'
+        "401":
+          description: Invalid credentials
+          schema:
+            $ref: '#/definitions/rest.ResponseError'
+        "403":
+          description: Account is locked
+          schema:
+            $ref: '#/definitions/rest.ResponseError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/rest.ResponseError'
+      summary: Login a user
+      tags:
+      - Auth
+  /api/v1/notifications:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve notifications for the authenticated user
+      parameters:
+      - description: Bearer <token>
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of notifications
+          schema:
+            items:
+              $ref: '#/definitions/domain.Notification'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/rest.ResponseError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/rest.ResponseError'
+      summary: Get user notifications
+      tags:
+      - Notifications
+  /api/v1/profile:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve the profile of the authenticated user
+      parameters:
+      - description: Authorization token (Bearer <token>)
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User profile
+          schema:
+            $ref: '#/definitions/domain.Profile'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/rest.ResponseError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/rest.ResponseError'
+      summary: Get user profile
+      tags:
+      - Profile
+  /api/v1/profile/change-email:
+    post:
+      consumes:
+      - application/json
+      description: Change the email for the authenticated user
+      parameters:
+      - description: Authorization token (Bearer <token>)
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: New email
+        in: body
+        name: new_email
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Email changed successfully
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid request payload
+          schema:
+            $ref: '#/definitions/rest.ResponseError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/rest.ResponseError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/rest.ResponseError'
+      summary: Change user email
+      tags:
+      - Profile
+  /api/v1/profile/change-password:
+    post:
+      consumes:
+      - application/json
+      description: Change the password for the authenticated user
+      parameters:
+      - description: Authorization token (Bearer <token>)
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: New password
+        in: body
+        name: new_password
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Password changed successfully
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid request payload
+          schema:
+            $ref: '#/definitions/rest.ResponseError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/rest.ResponseError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/rest.ResponseError'
+      summary: Change user password
+      tags:
+      - Profile
+swagger: "2.0"

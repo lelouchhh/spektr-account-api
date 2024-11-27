@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	echo "github.com/labstack/echo"
+	echo "github.com/labstack/echo/v4"
 )
 
 // SetRequestContextWithTimeout will set the request context with timeout for every incoming HTTP Request

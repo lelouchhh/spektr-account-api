@@ -6,12 +6,9 @@ import (
 	"errors"
 	"fmt"
 	"github.com/llchhh/spektr-account-api/domain"
-	"github.com/llchhh/spektr-account-api/internal/encryption"
-	"github.com/llchhh/spektr-account-api/internal/rest/middleware"
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"os"
 )
 
 type AuthRepository struct {
@@ -19,20 +16,22 @@ type AuthRepository struct {
 	baseURL string
 }
 
-// Response struct to match the response format that contains session_id
+func (a *AuthRepository) RequestPasswordResetToken(ctx context.Context, user domain.Auth) (string, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (a *AuthRepository) UpdatePassword(ctx context.Context, token, password string) error {
+	//TODO implement me
+	panic("implement me")
+}
+
 type AuthResponse struct {
+	Error     string `json:"error"`
 	SessionID string `json:"session_id"`
 }
 
 func (a *AuthRepository) Login(ctx context.Context, user domain.Auth) (string, error) {
-	// Marshal the user data into a JSON object for arg1
-	if middleware.IsSuspicious(user.Login) {
-		return "", fmt.Errorf("invalid input detected")
-	}
-
-	if middleware.IsSuspicious(user.Password) {
-		return "", fmt.Errorf("invalid input detected")
-	}
 	arg1JSON, err := json.Marshal(user)
 	if err != nil {
 		return "", fmt.Errorf("failed to marshal user data: %w", err)
@@ -84,15 +83,14 @@ func (a *AuthRepository) Login(ctx context.Context, user domain.Auth) (string, e
 	if err := json.Unmarshal(body, &result); err != nil {
 		return "", fmt.Errorf("failed to unmarshal response: %w", err)
 	}
+	if result.Error != "" {
+		return "", domain.ErrInvalidCredentials
+	}
 	// Ensure the session_id is present in the response
 	if result.SessionID == "" {
 		return "", errors.New("session_id not found in the response")
 	}
-	encryptedToken, err := encryption.EncryptToken(os.Getenv("ENCRYPTION_KEY"), result.SessionID)
-	if err != nil {
-		return "", fmt.Errorf("failed to encrypt token: %w", err)
-	}
-	return encryptedToken, nil
+	return result.SessionID, nil
 }
 
 func NewAuthRepository(baseURL string) *AuthRepository {

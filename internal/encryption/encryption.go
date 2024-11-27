@@ -1,50 +1,81 @@
 package encryption
 
 import (
-	"crypto/aes"
-	"crypto/cipher"
-	"encoding/base64"
 	"errors"
+	"strings"
+	"unicode"
 )
 
-// EncryptToken шифрует токен с использованием AES
-func EncryptToken(key, token string) (string, error) {
-	block, err := aes.NewCipher([]byte(key))
-	if err != nil {
-		return "", err
+// Encrypt encrypts an alphanumeric string using a Vigenère cipher with the given key.
+func Encrypt(input, key string) (string, error) {
+	if !isAlphaNumeric(input) || !isAlphaNumeric(key) {
+		return "", errors.New("input and key must contain only numbers and alphabets")
 	}
 
-	plaintext := []byte(token)
-	ciphertext := make([]byte, aes.BlockSize+len(plaintext))
+	var encrypted strings.Builder
+	keyIndex := 0
+	keyLength := len(key)
 
-	iv := ciphertext[:aes.BlockSize]
-	stream := cipher.NewCFBEncrypter(block, iv)
-	stream.XORKeyStream(ciphertext[aes.BlockSize:], plaintext)
+	for _, char := range input {
+		shift := calculateShift(rune(key[keyIndex%keyLength]))
+		encrypted.WriteRune(shiftChar(char, shift))
+		keyIndex++
+	}
 
-	return base64.StdEncoding.EncodeToString(ciphertext), nil
+	return encrypted.String(), nil
 }
 
-// DecryptToken расшифровывает токен
-func DecryptToken(key, encryptedToken string) (string, error) {
-	block, err := aes.NewCipher([]byte(key))
-	if err != nil {
-		return "", err
+// Decrypt decrypts an alphanumeric string encrypted using a Vigenère cipher with the given key.
+func Decrypt(input, key string) (string, error) {
+	if !isAlphaNumeric(input) || !isAlphaNumeric(key) {
+		return "", errors.New("input and key must contain only numbers and alphabets")
 	}
 
-	ciphertext, err := base64.StdEncoding.DecodeString(encryptedToken)
-	if err != nil {
-		return "", err
+	var decrypted strings.Builder
+	keyIndex := 0
+	keyLength := len(key)
+
+	for _, char := range input {
+		shift := calculateShift(rune(key[keyIndex%keyLength]))
+		decrypted.WriteRune(shiftChar(char, -shift))
+		keyIndex++
 	}
 
-	if len(ciphertext) < aes.BlockSize {
-		return "", errors.New("ciphertext too short")
+	return decrypted.String(), nil
+}
+
+// calculateShift calculates the shift value based on a character in the key.
+func calculateShift(keyChar rune) int {
+	if unicode.IsLower(keyChar) {
+		return int(keyChar - 'a')
+	} else if unicode.IsUpper(keyChar) {
+		return int(keyChar - 'A')
+	} else if unicode.IsDigit(keyChar) {
+		return int(keyChar - '0')
 	}
+	return 0
+}
 
-	iv := ciphertext[:aes.BlockSize]
-	ciphertext = ciphertext[aes.BlockSize:]
+// shiftChar shifts a character by the given shift value, wrapping around alphabets and numbers.
+func shiftChar(char rune, shift int) rune {
+	if char >= 'a' && char <= 'z' {
+		return 'a' + (char-'a'+rune(shift)+26)%26
+	} else if char >= 'A' && char <= 'Z' {
+		return 'A' + (char-'A'+rune(shift)+26)%26
+	} else if char >= '0' && char <= '9' {
+		return '0' + (char-'0'+rune(shift)+10)%10
+	}
+	return char
+}
 
-	stream := cipher.NewCFBDecrypter(block, iv)
-	stream.XORKeyStream(ciphertext, ciphertext)
-
-	return string(ciphertext), nil
+// isAlphaNumeric checks if a string contains only numbers and alphabets.
+func isAlphaNumeric(input string) bool {
+	for _, char := range input {
+		if !(char >= 'a' && char <= 'z') &&
+			!(char >= 'A' && char <= 'Z') &&
+			!(char >= '0' && char <= '9') {
+			return false
+		}
+	}
+	return true
 }
