@@ -5,6 +5,8 @@ definitions:
         type: string
       passwd:
         type: string
+      token:
+        type: string
     type: object
   domain.Notification:
     properties:
@@ -56,6 +58,42 @@ info:
   title: Example API
   version: "1.0"
 paths:
+  /api/v1/auth/request-password-reset-token:
+    post:
+      consumes:
+      - application/json
+      description: Requests a token to reset the user's password
+      parameters:
+      - description: Login credentials
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/domain.Auth'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Message
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid request payload
+          schema:
+            $ref: '#/definitions/rest.ResponseError'
+        "401":
+          description: Invalid credentials
+          schema:
+            $ref: '#/definitions/rest.ResponseError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/rest.ResponseError'
+      summary: Request a password reset token
+      tags:
+      - Auth
   /api/v1/auth/sign-in:
     post:
       consumes:
@@ -94,6 +132,46 @@ paths:
           schema:
             $ref: '#/definitions/rest.ResponseError'
       summary: Login a user
+      tags:
+      - Auth
+  /api/v1/auth/update-password:
+    post:
+      consumes:
+      - application/json
+      description: Update the password for a user using the reset token and new password
+      parameters:
+      - description: Password reset request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.Auth'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Password updated successfully
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid request payload
+          schema:
+            $ref: '#/definitions/rest.ResponseError'
+        "401":
+          description: Invalid credentials
+          schema:
+            $ref: '#/definitions/rest.ResponseError'
+        "403":
+          description: Account is locked
+          schema:
+            $ref: '#/definitions/rest.ResponseError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/rest.ResponseError'
+      summary: Update the user's password
       tags:
       - Auth
   /api/v1/notifications:
@@ -236,6 +314,47 @@ paths:
           schema:
             $ref: '#/definitions/rest.ResponseError'
       summary: Change user password
+      tags:
+      - Profile
+  /api/v1/profile/change-phone:
+    post:
+      consumes:
+      - application/json
+      description: Change the email for the authenticated user
+      parameters:
+      - description: Authorization token (Bearer <token>)
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: New phone
+        in: body
+        name: new_email
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: phone changed successfully
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid request payload
+          schema:
+            $ref: '#/definitions/rest.ResponseError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/rest.ResponseError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/rest.ResponseError'
+      summary: Change user phone
       tags:
       - Profile
 swagger: "2.0"

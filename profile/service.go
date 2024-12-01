@@ -15,6 +15,7 @@ type ProfileRepository interface {
 	Profile(ctx context.Context, token string) (domain.Profile, error)
 	ChangePassword(ctx context.Context, token string, password string) error
 	ChangeEmail(ctx context.Context, token string, email string) error
+	ChangePhone(ctx context.Context, token string, newPhone string) error
 }
 
 type Service struct {
@@ -58,7 +59,12 @@ func (s *Service) ChangePassword(ctx context.Context, token string, password str
 	}
 	err := middleware.ValidatePassword(password)
 	if err != nil {
+		log.Println("Invalid phone number format detected")
 		return domain.ErrInvalidCredentials
+	}
+	if middleware.ContainsForbiddenChars(token) {
+		log.Println("Invalid token format detected")
+		return domain.ErrInvalidToken
 	}
 	log.Printf("Changing password for token: %s", token)
 
@@ -88,7 +94,14 @@ func (s *Service) ChangeEmail(ctx context.Context, token string, email string) e
 		log.Println("ChangeEmail request failed: missing email")
 		return fmt.Errorf("email cannot be empty")
 	}
-
+	if middleware.ContainsForbiddenChars(email) {
+		log.Println("Invalid phone number format detected")
+		return domain.ErrInvalidCredentials
+	}
+	if middleware.ContainsForbiddenChars(token) {
+		log.Println("Invalid token format detected")
+		return domain.ErrInvalidToken
+	}
 	log.Printf("Changing email for token: %s", token)
 
 	err := s.profileRepo.ChangeEmail(ctx, token, email)
@@ -104,5 +117,41 @@ func (s *Service) ChangeEmail(ctx context.Context, token string, email string) e
 	}
 
 	log.Printf("Email successfully changed for token: %s", token)
+	return nil
+}
+
+// ChangePhone updates the user's phone using the provided token and new email.
+func (s *Service) ChangePhone(ctx context.Context, token string, phone string) error {
+	if token == "" {
+		log.Println("ChangePhone request failed: missing authorization token")
+		return fmt.Errorf("authorization token is required")
+	}
+	if phone == "" {
+		log.Println("ChangePhone request failed: missing email")
+		return fmt.Errorf("phone cannot be empty")
+	}
+	if middleware.ContainsForbiddenChars(phone) {
+		log.Println("Invalid phone number format detected")
+		return domain.ErrInvalidCredentials
+	}
+	if middleware.ContainsForbiddenChars(token) {
+		log.Println("Invalid token format detected")
+		return domain.ErrInvalidToken
+	}
+	log.Printf("Changing phone for token: %s", token)
+
+	err := s.profileRepo.ChangePhone(ctx, token, phone)
+	if err != nil {
+		log.Printf("Error changing phone for token %s: %v", token, err)
+
+		// Check if the error indicates an expired token
+		if strings.Contains(err.Error(), "invalid token") {
+			log.Println("Token has expired or is invalid.")
+			return domain.ErrSessionExpired
+		}
+		return err
+	}
+
+	log.Printf("phone successfully changed for token: %s", token)
 	return nil
 }

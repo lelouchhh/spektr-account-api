@@ -34,7 +34,7 @@ func ValidatePassword(password string) error {
 	//}
 
 	// Check for unwanted characters (e.g., /, ;, etc.)
-	if containsForbiddenChars(password) {
+	if ContainsForbiddenChars(password) {
 		return fmt.Errorf("password contains forbidden characters like /, ;, etc.")
 	}
 	//
@@ -71,7 +71,7 @@ func hasSpecialChar(s string) bool {
 }
 
 // Helper function to check if the password contains forbidden characters like /, ;
-func containsForbiddenChars(password string) bool {
+func ContainsForbiddenChars(password string) bool {
 	// List of forbidden characters
 	forbiddenChars := []string{"/", ";", "\"", "'", "<", ">", "|", ":", "&"}
 

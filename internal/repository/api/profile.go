@@ -260,8 +260,164 @@ func (p *ProfileRepository) ChangePassword(ctx context.Context, suid string, new
 	return nil
 }
 
-// Updates the user's email.
-func (p *ProfileRepository) ChangeEmail(ctx context.Context, token string, email string) error {
+// ChangePhone sends a request to update the phone number for a user.
+func (p *ProfileRepository) ChangePhone(ctx context.Context, suid string, newPhone string) error {
+	// Log the incoming request for phone number change
+	log.Printf("Requesting phone number change for user with suid: %s", suid)
+
+	// Validate input parameters
+	if suid == "" {
+		log.Println("ChangePhone failed: missing suid")
+		return fmt.Errorf("suid is required")
+	}
+	// Construct the `arg1` parameter as a JSON string
+	arg1 := fmt.Sprintf(`{"suid":"%s", "sms":"%s"}`, suid, newPhone)
+
+	// Construct query parameters
+	params := url.Values{}
+	params.Add("format", "json")
+	params.Add("context", "web")
+	params.Add("model", "users")
+	params.Add("method1", "web_cabinet.set_user_info")
+	params.Add("arg1", arg1)
+
+	// Construct the request URL
+	requestURL := fmt.Sprintf("%s?%s", p.baseURL, params.Encode())
+	log.Printf("Request URL: %s", requestURL)
+
+	// Create the HTTP GET request
+	req, err := http.NewRequest("GET", requestURL, nil)
+	if err != nil {
+		log.Printf("Error creating request: %v", err)
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+
+	// Set context and send the request
+	req = req.WithContext(ctx)
+	resp, err := p.client.Do(req)
+	if err != nil {
+		log.Printf("Request error: %v", err)
+		return fmt.Errorf("request error: %w", err)
+	}
+	defer resp.Body.Close()
+
+	// Check response status code
+	if resp.StatusCode != http.StatusOK {
+		log.Printf("Failed to change phone number, status code: %d", resp.StatusCode)
+		return fmt.Errorf("failed to change phone number, status code: %d", resp.StatusCode)
+	}
+
+	// Parse the response body
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Printf("Error reading response body: %v", err)
+		return fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	// Define a struct to map the API response
+	var apiResponse struct {
+		Error string `json:"error"`
+	}
+
+	// Unmarshal the response into the struct
+	if err := json.Unmarshal(body, &apiResponse); err != nil {
+		log.Printf("Error unmarshalling response: %v", err)
+		return fmt.Errorf("failed to unmarshal API response: %w", err)
+	}
+
+	// Handle API errors
+	if apiResponse.Error != "" {
+		log.Printf("API error: %s", apiResponse.Error)
+		if apiResponse.Error == "Необходимо авторизоваться" {
+			// Handle invalid token (authentication required)
+			log.Println("Invalid token provided.")
+			return domain.ErrSessionExpired
+		}
+		return fmt.Errorf("API error: %s", apiResponse.Error)
+	}
+
+	log.Printf("Phone number successfully changed for user with suid: %s", suid)
+	return nil
+}
+
+// ChangeEmail sends a request to update the email address for a user.
+func (p *ProfileRepository) ChangeEmail(ctx context.Context, suid string, newEmail string) error {
+	// Log the incoming request for email address change
+	log.Printf("Requesting email address change for user with suid: %s", suid)
+
+	// Validate input parameters
+	if suid == "" {
+		log.Println("ChangeEmail failed: missing suid")
+		return fmt.Errorf("suid is required")
+	}
+	// Construct the `arg1` parameter as a JSON string
+	arg1 := fmt.Sprintf(`{"suid":"%s", "email":"%s"}`, suid, newEmail)
+
+	// Construct query parameters
+	params := url.Values{}
+	params.Add("format", "json")
+	params.Add("context", "web")
+	params.Add("model", "users")
+	params.Add("method1", "web_cabinet.set_user_info")
+	params.Add("arg1", arg1)
+
+	// Construct the request URL
+	requestURL := fmt.Sprintf("%s?%s", p.baseURL, params.Encode())
+	log.Printf("Request URL: %s", requestURL)
+
+	// Create the HTTP GET request
+	req, err := http.NewRequest("GET", requestURL, nil)
+	if err != nil {
+		log.Printf("Error creating request: %v", err)
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+
+	// Set context and send the request
+	req = req.WithContext(ctx)
+	resp, err := p.client.Do(req)
+	if err != nil {
+		log.Printf("Request error: %v", err)
+		return fmt.Errorf("request error: %w", err)
+	}
+	defer resp.Body.Close()
+
+	// Check response status code
+	if resp.StatusCode != http.StatusOK {
+		log.Printf("Failed to change email address, status code: %d", resp.StatusCode)
+		return fmt.Errorf("failed to change email address, status code: %d", resp.StatusCode)
+	}
+
+	// Parse the response body
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Printf("Error reading response body: %v", err)
+		return fmt.Errorf("failed to read response body: %w", err)
+	}
+	fmt.Println(suid, newEmail)
+	fmt.Println(string(body))
+	// Define a struct to map the API response
+	var apiResponse struct {
+		Error string `json:"error"`
+	}
+
+	// Unmarshal the response into the struct
+	if err := json.Unmarshal(body, &apiResponse); err != nil {
+		log.Printf("Error unmarshalling response: %v", err)
+		return fmt.Errorf("failed to unmarshal API response: %w", err)
+	}
+
+	// Handle API errors
+	if apiResponse.Error != "" {
+		log.Printf("API error: %s", apiResponse.Error)
+		if apiResponse.Error == "Необходимо авторизоваться" {
+			// Handle invalid token (authentication required)
+			log.Println("Invalid token provided.")
+			return domain.ErrSessionExpired
+		}
+		return fmt.Errorf("API error: %s", apiResponse.Error)
+	}
+
+	log.Printf("Email address successfully changed for user with suid: %s", suid)
 	return nil
 }
 

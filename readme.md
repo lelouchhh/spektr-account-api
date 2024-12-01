@@ -14,3 +14,10 @@
 2. profile
    1. get_profile
    2. change_password
+## Data for tests
+```
+  sms: +79134773649
+  email: llchh@yahoo.com
+  login: S540100440
+  pass: S540100440
+```
