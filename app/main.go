@@ -17,6 +17,7 @@ import (
 	"github.com/llchhh/spektr-account-api/internal/rest/middleware"
 	"github.com/llchhh/spektr-account-api/notification"
 	"github.com/llchhh/spektr-account-api/profile"
+	"github.com/llchhh/spektr-account-api/repair"
 	"github.com/swaggo/http-swagger" // Swagger UI handler
 	"log"
 	"os"
@@ -62,6 +63,10 @@ func main() {
 	notiRepo := api.NewNotificationRepository(os.Getenv("BASE_URL"))
 	notiSvc := notification.NewService(notiRepo)
 	rest.NewNotificationHandler(e, notiSvc)
+
+	repairRepo := api.NewRepairRepository(os.Getenv("BASE_URL"))
+	repairSvc := repair.NewService(repairRepo)
+	rest.NewRepairHandler(e, *repairSvc)
 
 	// Получаем API ключ из переменной окружения
 	apiKey := os.Getenv("API_KEY")

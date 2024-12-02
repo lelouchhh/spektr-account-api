@@ -3,7 +3,6 @@ package profile
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/llchhh/spektr-account-api/internal/rest/middleware"
 	"log"
 	"strings"
@@ -35,7 +34,7 @@ func (s *Service) Profile(ctx context.Context, token string) (domain.Profile, er
 		log.Println("Profile request failed: missing authorization token")
 		return domain.Profile{}, domain.ErrInvalidToken
 	}
-	if middleware.IsSuspicious(token) {
+	if middleware.ContainsForbiddenChars(token) {
 		return domain.Profile{}, domain.ErrInvalidToken
 	}
 	log.Printf("Fetching profile for token: %s", token)
@@ -86,14 +85,6 @@ func (s *Service) ChangePassword(ctx context.Context, token string, password str
 
 // ChangeEmail updates the user's email using the provided token and new email.
 func (s *Service) ChangeEmail(ctx context.Context, token string, email string) error {
-	if token == "" {
-		log.Println("ChangeEmail request failed: missing authorization token")
-		return fmt.Errorf("authorization token is required")
-	}
-	if email == "" {
-		log.Println("ChangeEmail request failed: missing email")
-		return fmt.Errorf("email cannot be empty")
-	}
 	if middleware.ContainsForbiddenChars(email) {
 		log.Println("Invalid phone number format detected")
 		return domain.ErrInvalidCredentials
@@ -109,7 +100,7 @@ func (s *Service) ChangeEmail(ctx context.Context, token string, email string) e
 		log.Printf("Error changing email for token %s: %v", token, err)
 
 		// Check if the error indicates an expired token
-		if strings.Contains(err.Error(), "invalid token") {
+		if strings.Contains(err.Error(), "Необходимо авторизоваться") {
 			log.Println("Token has expired or is invalid.")
 			return domain.ErrSessionExpired
 		}
@@ -122,14 +113,6 @@ func (s *Service) ChangeEmail(ctx context.Context, token string, email string) e
 
 // ChangePhone updates the user's phone using the provided token and new email.
 func (s *Service) ChangePhone(ctx context.Context, token string, phone string) error {
-	if token == "" {
-		log.Println("ChangePhone request failed: missing authorization token")
-		return fmt.Errorf("authorization token is required")
-	}
-	if phone == "" {
-		log.Println("ChangePhone request failed: missing email")
-		return fmt.Errorf("phone cannot be empty")
-	}
 	if middleware.ContainsForbiddenChars(phone) {
 		log.Println("Invalid phone number format detected")
 		return domain.ErrInvalidCredentials
@@ -145,7 +128,7 @@ func (s *Service) ChangePhone(ctx context.Context, token string, phone string) e
 		log.Printf("Error changing phone for token %s: %v", token, err)
 
 		// Check if the error indicates an expired token
-		if strings.Contains(err.Error(), "invalid token") {
+		if strings.Contains(err.Error(), "Необходимо авторизоваться") {
 			log.Println("Token has expired or is invalid.")
 			return domain.ErrSessionExpired
 		}

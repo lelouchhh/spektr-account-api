@@ -28,7 +28,7 @@ func (s *Service) GetNotifications(ctx context.Context, token string) ([]domain.
 		log.Println("GetNotifications request failed: missing authorization token")
 		return nil, domain.ErrInvalidToken
 	}
-	if middleware.IsSuspicious(token) {
+	if middleware.ContainsForbiddenChars(token) {
 		return nil, domain.ErrInvalidToken
 	}
 	log.Printf("Fetching notifications for token: %s", token)

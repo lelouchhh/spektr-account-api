@@ -70,20 +70,6 @@ func hasSpecialChar(s string) bool {
 	return re.MatchString(s)
 }
 
-// Helper function to check if the password contains forbidden characters like /, ;
-func ContainsForbiddenChars(password string) bool {
-	// List of forbidden characters
-	forbiddenChars := []string{"/", ";", "\"", "'", "<", ">", "|", ":", "&"}
-
-	// Check if password contains any forbidden character
-	for _, char := range forbiddenChars {
-		if strings.Contains(password, char) {
-			return true
-		}
-	}
-	return false
-}
-
 // Helper function to check if the password contains any common or weak words
 func containsCommonPassword(password string) bool {
 	// Convert password to lowercase for comparison

@@ -69,11 +69,11 @@ func NewService(a AuthRepository) *Service {
 
 func (s *Service) Login(ctx context.Context, user domain.Auth) (string, error) {
 	// Marshal the user data into a JSON object for arg1
-	if middleware.IsSuspicious(user.Login) {
+	if middleware.ContainsForbiddenChars(user.Login) {
 		return "", domain.ErrInvalidCredentials
 	}
 
-	if middleware.IsSuspicious(user.Password) {
+	if middleware.ContainsForbiddenChars(user.Password) {
 		return "", domain.ErrInvalidCredentials
 	}
 	token, err := s.authRepo.Login(ctx, user)
